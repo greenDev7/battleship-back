@@ -8,7 +8,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class Game(Base):
+class TGame(Base):
     __tablename__ = "tgame"
 
     id = mapped_column(Uuid, primary_key=True)
@@ -19,7 +19,7 @@ class Game(Base):
     user_loser = mapped_column(ForeignKey("tuser.id"))
 
 
-class User(Base):
+class TUser(Base):
     __tablename__ = "tuser"
 
     id = mapped_column(Uuid, primary_key=True)
