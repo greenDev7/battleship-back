@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /usr/src/app
 
-# Tell pipenv to create venv in the current directory
+# Tell pipenv to create venv in custom directory
 ENV PIPENV_CUSTOM_VENV_NAME=battleship_venv
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
