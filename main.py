@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,3 +33,7 @@ async def health_check():
 @app.post("/createTables")
 async def health_check():
     create_tables(get_engine())
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=5000)
