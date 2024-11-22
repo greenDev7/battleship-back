@@ -9,6 +9,9 @@ uvicorn = "==0.32.0"
 SQLAlchemy = "==2.0.36"
 psycopg2-binary = "==2.9.10"
 websockets = "==14.1"
+configloader = "==1.0.1"
+PyYAML = "==6.0.2"
+attrdict = "==2.0.1"
 
 [dev-packages]
 
