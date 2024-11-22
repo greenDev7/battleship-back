@@ -13,9 +13,9 @@ router = APIRouter(
 manager = ConnectionManager()
 
 
-@router.websocket_route("/client/{client_uuid}/ws")
-async def websocket_endpoint(ws: WebSocket):
-    await manager.connect()
+@router.websocket("/client/{client_uuid}/ws")
+async def websocket_endpoint(ws: WebSocket, client_uuid: uuid.UUID):
+    await manager.connect(client_uuid, ws)
     try:
         while True:
             data_from_client = await ws.receive_json()
@@ -24,5 +24,5 @@ async def websocket_endpoint(ws: WebSocket):
             print('data_for_client:', data_for_client)
             await ws.send_text(data_for_client)
     except WebSocketDisconnect:
-        manager.disconnect(ws)
+        manager.disconnect(client_uuid)
         manager.print_clients()
