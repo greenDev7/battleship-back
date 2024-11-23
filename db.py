@@ -26,16 +26,11 @@ def session_scope():
 
     try:
         yield session
-
-        print('1111')
         session.commit()
     except Exception as ex:
-        print('2222 ex')
         session.rollback()
-
         raise ex
     finally:
-        print('3333 session.close')
         session.close()
 
 
