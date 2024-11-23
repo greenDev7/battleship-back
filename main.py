@@ -21,7 +21,7 @@ app.add_middleware(CORSMiddleware,
                    )
 
 app.include_router(user.router)
-app.include_router(game.router)
+# app.include_router(game.router)
 app.include_router(ws.router)
 
 
@@ -31,8 +31,8 @@ async def health_check():
 
 
 @app.post("/createTables")
-async def health_check():
-    create_tables(get_engine())
+async def initialize_tables():
+    await create_tables(get_engine())
 
 
 if __name__ == '__main__':

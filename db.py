@@ -43,5 +43,5 @@ def get_engine() -> Engine:
     return engine
 
 
-def create_tables(eng: Engine):
+async def create_tables(eng: Engine):
     Base.metadata.create_all(eng)
