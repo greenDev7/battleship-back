@@ -1,16 +1,8 @@
-from sqlalchemy import select
+import uuid
+from fastapi import WebSocket
 
-import db
-
-
-# def get_user_for_random_game(data_from_client):
-#     # with db.session_scope() as s_:
-#     #     select(TUser).
+from controllers.ws.user import create_active_user
 
 
-async def process_data(data_from_client):
-    # create_user(data_from_client)
-    return 'lalallal'
-    pass
-
-    # get_user_for_random_game(data_from_client)
+async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSocket):
+    create_active_user(client_uuid, data_from_client, ws.client.host, ws.client.port)

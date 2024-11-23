@@ -2,17 +2,27 @@ import datetime
 import uuid
 
 import db
-#
-# game_type: dict = dict({
-#     'RANDOM': 1,
-#     'FRIEND': 2,
-#     'COMPUTER': 3
-# })
-#
-#
-# def create_user(user_body: dict):
-#     with db.session_scope() as s_:
-#         user = TUser(id=uuid.uuid4(), dfname=user_body["nickName"],
-#                      dfcreated_on=datetime.datetime.now() + datetime.timedelta(hours=3),
-#                      dfgame_type=game_type[user_body["gameType"]])
-#         s_.add(user)
+from entities.model import TActiveUser
+
+game_type: dict = dict({
+    'RANDOM': 1,
+    'FRIEND': 2,
+    'COMPUTER': 3
+})
+
+active_user_state: dict = dict({
+    'WAITING_FOR_ENEMY': 1,
+    'SHIPS_POSITIONING': 2,
+    'PLAYING': 3
+})
+
+
+def create_active_user(client_uuid: uuid.UUID, data_from_client: dict, client_ip: str, client_port: int):
+    with db.session_scope() as s_:
+        user = TActiveUser(id=client_uuid, dfname=data_from_client["nickName"],
+                           dfcreated_on=datetime.datetime.now(),
+                           dfgame_type=game_type[data_from_client["gameType"]],
+                           dfstate=active_user_state['WAITING_FOR_ENEMY'],
+                           dfclient_host_ip=client_ip,
+                           dfclient_port=str(client_port))
+        s_.add(user)
