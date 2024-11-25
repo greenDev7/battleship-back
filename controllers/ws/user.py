@@ -1,7 +1,7 @@
 import datetime
 import uuid
 
-from sqlalchemy import select, and_, desc
+from sqlalchemy import select, and_, asc
 
 import db
 from entities.model import TActiveUser
@@ -38,8 +38,7 @@ def get_active_user_nick_name_for_random_game(client_uuid: uuid.UUID) -> str:
                 TActiveUser.dfgame_type == game_type['RANDOM'],
                 TActiveUser.dfstate == active_user_state['WAITING_FOR_ENEMY'],
             )
-        ).order_by(desc(TActiveUser.dfcreated_on)).limit(1)
+        ).order_by(asc(TActiveUser.dfcreated_on)).limit(1)
 
-        nick_name = s_.execute(stmt).scalar()
+        return s_.execute(stmt).scalar()
 
-        return nick_name

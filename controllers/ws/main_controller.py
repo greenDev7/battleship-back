@@ -12,7 +12,6 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSo
         try:
             create_active_user(client_uuid, data_from_client, ws.client.host, ws.client.port)
             nick_name = get_active_user_nick_name_for_random_game(client_uuid)
-            return {'msg_type': msg_type, 'data': nick_name, 'status': 'ok'}
+            return {'msg_type': msg_type, 'data': {'nick_name': nick_name}, 'is_status_ok': True}
         except Exception as ex:
-            return {'msg_type': msg_type, 'data': str(ex), 'status': 'error'}
-
+            return {'msg_type': msg_type, 'data': str(ex), 'is_status_ok': False}
