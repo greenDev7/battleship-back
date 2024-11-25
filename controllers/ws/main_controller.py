@@ -1,7 +1,7 @@
 import uuid
 from fastapi import WebSocket
 
-from controllers.ws.user import create_active_user
+from controllers.ws.user import create_active_user, get_active_user_nick_name_for_random_game
 
 
 async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSocket) -> dict:
@@ -11,7 +11,8 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSo
     if msg_type == 'active_user_for_random_game_creation':
         try:
             create_active_user(client_uuid, data_from_client, ws.client.host, ws.client.port)
-            return {'msg_type': msg_type, 'data': None, 'status': 'ok'}
+            nick_name = get_active_user_nick_name_for_random_game(client_uuid)
+            return {'msg_type': msg_type, 'data': nick_name, 'status': 'ok'}
         except Exception as ex:
             return {'msg_type': msg_type, 'data': str(ex), 'status': 'error'}
 
