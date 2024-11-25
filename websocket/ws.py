@@ -19,9 +19,10 @@ async def websocket_endpoint(ws: WebSocket, client_uuid: uuid.UUID):
     try:
         while True:
             data_from_client = await ws.receive_json()
-            await process_data(client_uuid, data_from_client, ws)
             print('data_from_client:', data_from_client)
-            await ws.send_text('active_user_created')
+            data_to_client = await process_data(client_uuid, data_from_client, ws)
+            await manager.send_personal_message(client_uuid, data_to_client)
+            print('data_to_client:', data_to_client)
     except WebSocketDisconnect:
         manager.disconnect(client_uuid)
         manager.print_clients()

@@ -14,9 +14,9 @@ class ConnectionManager:
     def disconnect(self, client_uuid: uuid.UUID):
         self.active_connections.pop(client_uuid)
 
-    async def send_personal_message(self, message: str, client_uuid: uuid.UUID):
+    async def send_personal_message(self, client_uuid: uuid.UUID, message: dict):
         if client_uuid in self.active_connections:
-            await self.active_connections[client_uuid].send_text(message)
+            await self.active_connections[client_uuid].send_json(message)
 
     async def broadcast(self, message: str):  # но использовать широковещательную рассылку пока не планировал
         for connection in self.active_connections.values():
