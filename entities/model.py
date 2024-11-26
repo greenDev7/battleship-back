@@ -31,17 +31,18 @@ class TUserHistory(Base):
     dfclient_port = mapped_column(String(10))
 
 
-class TActiveUser(Base):
-    __tablename__ = "tactive_user"
+class TRivalCouple(Base):
+    __tablename__ = "trival_couple"
 
     id = mapped_column(Uuid, primary_key=True)
-    dfcreated_on = mapped_column(DateTime, default=datetime(year=2000, month=1, day=1))
-    dfupdated_on = mapped_column(DateTime, default=None)
-    dfname = mapped_column(String(50))
-    dfgame_type = mapped_column(ForeignKey("tgame_type.id"))
-    dfstate = mapped_column(ForeignKey("tactive_user_state.id"))
-    dfclient_host_ip = mapped_column(String(20))
-    dfclient_port = mapped_column(String(10))
+    dfplayer1 = mapped_column(Uuid)
+    dfplayer1_nickname = mapped_column(String(100))
+    dfplayer1_state = mapped_column(ForeignKey("tstate.id"))
+    dfplayer2 = mapped_column(Uuid)
+    dfplayer2_nickname = mapped_column(String(100))
+    dfplayer2_state = mapped_column(ForeignKey("tstate.id"))
+    dfcreated_on = mapped_column(DateTime)
+
 
 
 class TGameType(Base):
@@ -51,8 +52,8 @@ class TGameType(Base):
     dfname = mapped_column(String(30))
 
 
-class TActiveUserState(Base):
-    __tablename__ = "tactive_user_state"
+class TState(Base):
+    __tablename__ = "tstate"
 
     id = mapped_column(SmallInteger, primary_key=True)
     dfname = mapped_column(String(30))

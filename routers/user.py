@@ -4,7 +4,6 @@ from fastapi import APIRouter
 from sqlalchemy import select, func
 
 import db
-from entities.model import TActiveUser
 from model.user import User
 
 router = APIRouter(
@@ -14,16 +13,16 @@ router = APIRouter(
 )
 
 
-@router.get('/exists')
-def does_nickname_exist_in_db(nick_name: str):
-    """Возвращает True, если данный никнейм есть в таблице активных игроков, иначе False"""
-    with db.session_scope() as s_:
-        stmt = select(func.count(TActiveUser.id)).where(TActiveUser.dfname == nick_name)
-        count = s_.execute(stmt).scalar()
-
-        if count > 0:
-            return True
-        return False
+# @router.get('/exists')
+# def does_nickname_exist_in_db(nick_name: str):
+#     """Возвращает True, если данный никнейм есть в таблице активных игроков, иначе False"""
+#     with db.session_scope() as s_:
+#         stmt = select(func.count(TActiveUser.id)).where(TActiveUser.dfname == nick_name)
+#         count = s_.execute(stmt).scalar()
+#
+#         if count > 0:
+#             return True
+#         return False
 
 
 # @router.post("/")
