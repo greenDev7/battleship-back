@@ -6,6 +6,7 @@ from sqlalchemy import select, func, or_, and_, ColumnElement, update, asc
 
 import db
 from entities.model import TRivalCouple
+from websocket.connection_manager import ConnectionManager
 
 state: dict = dict({
     'WAITING_FOR_ENEMY': 1,
@@ -38,6 +39,7 @@ def create_rival_couple(client_uuid, data_from_client):
             dfplayer1_state=state['WAITING_FOR_ENEMY'],
             dfcreated_on=datetime.now(),
         )
+
         s_.add(rival_couple_player)
 
 
@@ -60,10 +62,10 @@ def add_player_to_rc(rc: TRivalCouple, client_uuid: uuid.UUID, data_from_client:
             rc.dfplayer2_state = state['SHIPS_POSITIONING']
             rc.dfplayer1_state = state['SHIPS_POSITIONING']
 
-        s_.add(rc)  # add to s_.dirty
+        s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
 
-async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSocket) -> dict:
+async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: ConnectionManager):
     msg_type = data_from_client['msg_type']
 
     if msg_type == 'random_game':
@@ -73,6 +75,5 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, ws: WebSo
             rc: TRivalCouple = find_available_rc()
             add_player_to_rc(rc, client_uuid, data_from_client)
 
-        #     return {'msg_type': msg_type, 'data': {'enemy_nick_name': None}, 'is_status_ok': True}
-        # except Exception as ex:
-        #     return {'msg_type': msg_type, 'data': str(ex), 'is_status_ok': False}
+            await manager.send_personal_message(client_uuid=rc.dfplayer1, message={'enemy_nickname': rc.dfplayer2_nickname})
+            await manager.send_personal_message(client_uuid=rc.dfplayer2, message={'enemy_nickname': rc.dfplayer1_nickname})
