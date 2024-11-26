@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from fastapi import WebSocket
-from sqlalchemy import select, func, or_, and_, ColumnElement, update, asc
+from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
 import db
 from entities.model import TRivalCouple
@@ -20,7 +19,7 @@ player_available_condition: ColumnElement[bool] = or_(
 )
 
 
-def available_rc_exists() -> bool:
+def available_rival_couple_exists() -> bool:
     with db.session_scope() as s_:
         stmt = select(func.count(TRivalCouple.id)).where(player_available_condition)
         count = s_.execute(stmt).scalar()
@@ -43,13 +42,13 @@ def create_rival_couple(client_uuid, data_from_client):
         s_.add(rival_couple_player)
 
 
-def find_available_rc() -> TRivalCouple:
+def find_available_rival_couple() -> TRivalCouple:
     with db.session_scope() as s_:
         stmt = select(TRivalCouple).where(player_available_condition).order_by(asc(TRivalCouple.dfcreated_on)).limit(1)
         return s_.execute(stmt).scalar()
 
 
-def add_player_to_rc(rc: TRivalCouple, client_uuid: uuid.UUID, data_from_client: dict):
+def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_from_client: dict):
     with db.session_scope() as s_:
         if not rc.dfplayer1:
             rc.dfplayer1 = client_uuid
@@ -69,11 +68,13 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
     msg_type = data_from_client['msg_type']
 
     if msg_type == 'random_game':
-        if not available_rc_exists():
+        if not available_rival_couple_exists():
             create_rival_couple(client_uuid, data_from_client)
         else:
-            rc: TRivalCouple = find_available_rc()
-            add_player_to_rc(rc, client_uuid, data_from_client)
+            rc: TRivalCouple = find_available_rival_couple()
+            add_player_to_rival_couple(rc, client_uuid, data_from_client)
 
-            await manager.send_personal_message(client_uuid=rc.dfplayer1, message={'enemy_nickname': rc.dfplayer2_nickname})
-            await manager.send_personal_message(client_uuid=rc.dfplayer2, message={'enemy_nickname': rc.dfplayer1_nickname})
+            await manager.send_personal_message(client_uuid=rc.dfplayer1,
+                                                message={'enemy_nickname': rc.dfplayer2_nickname})
+            await manager.send_personal_message(client_uuid=rc.dfplayer2,
+                                                message={'enemy_nickname': rc.dfplayer1_nickname})

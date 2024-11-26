@@ -44,7 +44,6 @@ class TRivalCouple(Base):
     dfcreated_on = mapped_column(DateTime)
 
 
-
 class TGameType(Base):
     __tablename__ = "tgame_type"
 
