@@ -75,6 +75,11 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             add_player_to_rival_couple(rc, client_uuid, data_from_client)
 
             await manager.send_personal_message(client_uuid=rc.dfplayer1,
-                                                message={'enemy_nickname': rc.dfplayer2_nickname})
+                                                message={'msg_type': msg_type,
+                                                         'data': {'enemy_nickname': rc.dfplayer2_nickname},
+                                                         'is_status_ok': True})
+
             await manager.send_personal_message(client_uuid=rc.dfplayer2,
-                                                message={'enemy_nickname': rc.dfplayer1_nickname})
+                                                message={'msg_type': msg_type,
+                                                         'data': {'enemy_nickname': rc.dfplayer1_nickname},
+                                                         'is_status_ok': True})
