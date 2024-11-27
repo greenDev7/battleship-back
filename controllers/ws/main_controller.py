@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import List
 
 from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
@@ -64,6 +65,25 @@ def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_fr
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
 
+def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> List[TRivalCouple]:
+    with db.session_scope() as s_:
+        stmt = select(TRivalCouple).where(
+            or_(
+                TRivalCouple.dfplayer1.__eq__(client_uuid),
+                TRivalCouple.dfplayer2.__eq__(client_uuid)
+            )
+        )
+
+        return s_.scalars(stmt).all()
+
+
+async def free_rival_couple_and_notify(client_uuid: uuid.UUID, manager: ConnectionManager):
+    couples: List[TRivalCouple] = find_rival_couple_by_client_id(client_uuid)
+    with db.session_scope() as s_:
+        for rc in couples:
+            s_.delete(rc)
+
+
 async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: ConnectionManager):
     msg_type = data_from_client['msg_type']
 
@@ -73,13 +93,5 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
         else:
             rc: TRivalCouple = find_available_rival_couple()
             add_player_to_rival_couple(rc, client_uuid, data_from_client)
-
-            await manager.send_personal_message(client_uuid=rc.dfplayer1,
-                                                message={'msg_type': msg_type,
-                                                         'data': {'enemy_nickname': rc.dfplayer2_nickname},
-                                                         'is_status_ok': True})
-
-            await manager.send_personal_message(client_uuid=rc.dfplayer2,
-                                                message={'msg_type': msg_type,
-                                                         'data': {'enemy_nickname': rc.dfplayer1_nickname},
-                                                         'is_status_ok': True})
+            await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
+            await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
