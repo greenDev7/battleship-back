@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import WebSocket, APIRouter, WebSocketDisconnect
 
-from controllers.ws.main_controller import process_data, free_rival_couple_and_notify
+from controllers.ws.main_controller import process_data, delete_rival_couple_and_notify
 from websocket.connection_manager import ConnectionManager
 
 router = APIRouter(
@@ -22,5 +22,5 @@ async def websocket_endpoint(ws: WebSocket, client_uuid: uuid.UUID):
             await process_data(client_uuid, data_from_client, manager)
     except WebSocketDisconnect:
         manager.disconnect(client_uuid)
-        await free_rival_couple_and_notify(client_uuid, manager)
+        await delete_rival_couple_and_notify(client_uuid, manager)
         manager.print_clients()

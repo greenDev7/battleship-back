@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import List
 
 from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
@@ -65,23 +64,34 @@ def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_fr
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
 
-def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> List[TRivalCouple]:
+def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> TRivalCouple:
     with db.session_scope() as s_:
         stmt = select(TRivalCouple).where(
             or_(
                 TRivalCouple.dfplayer1.__eq__(client_uuid),
                 TRivalCouple.dfplayer2.__eq__(client_uuid)
             )
-        )
+        ).limit(1)  # запись в БД с таким фильтром по-хорошему должна быть только одна
 
-        return s_.scalars(stmt).all()
+        return s_.scalar(stmt)
 
 
-async def free_rival_couple_and_notify(client_uuid: uuid.UUID, manager: ConnectionManager):
-    couples: List[TRivalCouple] = find_rival_couple_by_client_id(client_uuid)
+async def delete_rival_couple_and_notify(client_uuid: uuid.UUID, manager: ConnectionManager):
+    couple = find_rival_couple_by_client_id(client_uuid)
+
+    if not couple:
+        return
+
     with db.session_scope() as s_:
-        for rc in couples:
-            s_.delete(rc)
+        if couple.dfplayer1 and couple.dfplayer2:
+            if couple.dfplayer1 == client_uuid:  # если отключается player1, то оповещаем player2
+                await manager.send_structured_data(couple.dfplayer2, 'disconnection',
+                                                   {'enemy_nickname': couple.dfplayer1_nickname})
+            else:
+                await manager.send_structured_data(couple.dfplayer1, 'disconnection',
+                                                   {'enemy_nickname': couple.dfplayer2_nickname})
+
+        s_.delete(couple)
 
 
 async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: ConnectionManager):
