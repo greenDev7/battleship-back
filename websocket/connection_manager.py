@@ -18,6 +18,10 @@ class ConnectionManager:
         if client_uuid in self.active_connections:
             await self.active_connections[client_uuid].send_json(message)
 
+    async def send_structured_data(self, client_uuid: uuid.UUID, msg_type: str, data: dict, is_status_ok: bool = True):
+        message_to_send = {'msg_type': msg_type, 'data': data, 'is_status_ok': is_status_ok}
+        await self.send_personal_message(client_uuid, message_to_send)
+
     async def broadcast(self, message: str):  # но использовать широковещательную рассылку пока не планировал
         for connection in self.active_connections.values():
             await connection.send_text(message)
