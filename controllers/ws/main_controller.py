@@ -87,7 +87,7 @@ async def delete_rival_couple_and_notify(client_uuid: uuid.UUID, manager: Connec
             if couple.dfplayer1 == client_uuid:  # если отключается player1, то оповещаем player2
                 await manager.send_structured_data(couple.dfplayer2, 'disconnection',
                                                    {'enemy_nickname': couple.dfplayer1_nickname})
-            else:
+            else:  # и наоборот
                 await manager.send_structured_data(couple.dfplayer1, 'disconnection',
                                                    {'enemy_nickname': couple.dfplayer2_nickname})
 
@@ -105,3 +105,26 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             add_player_to_rival_couple(rc, client_uuid, data_from_client)
             await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
             await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
+
+    if msg_type == 'ships_are_arranged':
+        print(f'Client {client_uuid} is ready to play!')
+        rc = find_rival_couple_by_client_id(client_uuid)
+
+        if not rc:
+            return
+
+        with db.session_scope() as s_:
+            if rc.dfplayer1 == client_uuid:  # если первый игрок нажимает "Играть"
+                rc.dfplayer1_state = state['PLAYING']
+                await manager.send_structured_data(rc.dfplayer2, msg_type, {})
+            else:
+                rc.dfplayer2_state = state['PLAYING']
+                await manager.send_structured_data(rc.dfplayer1, msg_type, {})
+
+            #  Если оба игрока расставили корабли и нажали "Играть"
+            #  отправляем каждому сообщение с msg_type = 'play', сигнализирующее о начале игры
+            if rc.dfplayer1_state == state['PLAYING'] and rc.dfplayer2_state == state['PLAYING']:
+                await manager.send_structured_data(rc.dfplayer1, 'play', {})
+                await manager.send_structured_data(rc.dfplayer2, 'play', {})
+
+            s_.add(rc)
