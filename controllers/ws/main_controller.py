@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from random import randint
 
 from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
@@ -124,7 +125,14 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             #  Если оба игрока расставили корабли и нажали "Играть"
             #  отправляем каждому сообщение с msg_type = 'play', сигнализирующее о начале игры
             if rc.dfplayer1_state == state['PLAYING'] and rc.dfplayer2_state == state['PLAYING']:
-                await manager.send_structured_data(rc.dfplayer1, 'play', {})
-                await manager.send_structured_data(rc.dfplayer2, 'play', {})
 
-            s_.add(rc)
+                #  определяем кто из игроков ходит первый
+                turn = randint(1, 2)
+                if turn == 1:
+                    await manager.send_structured_data(rc.dfplayer1, 'play', {'turn_to_shoot': True})
+                    await manager.send_structured_data(rc.dfplayer2, 'play', {'turn_to_shoot': False})
+                else:
+                    await manager.send_structured_data(rc.dfplayer1, 'play', {'turn_to_shoot': False})
+                    await manager.send_structured_data(rc.dfplayer2, 'play', {'turn_to_shoot': True})
+
+            s_.add(rc)  # и обновляем запись в БД
