@@ -117,10 +117,10 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
         with db.session_scope() as s_:
             if rc.dfplayer1 == client_uuid:  # если первый игрок нажимает "Играть"
                 rc.dfplayer1_state = state['PLAYING']
-                await manager.send_structured_data(rc.dfplayer2, msg_type, {})
+                await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_client_id': str(rc.dfplayer1)})
             else:
                 rc.dfplayer2_state = state['PLAYING']
-                await manager.send_structured_data(rc.dfplayer1, msg_type, {})
+                await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_client_id': str(rc.dfplayer2)})
 
             #  Если оба игрока расставили корабли и нажали "Играть"
             #  отправляем каждому сообщение с msg_type = 'play', сигнализирующее о начале игры
@@ -136,3 +136,11 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                     await manager.send_structured_data(rc.dfplayer2, 'play', {'turn_to_shoot': True})
 
             s_.add(rc)  # и обновляем запись в БД
+
+    if msg_type == 'fire':
+        print('data_from_client', data_from_client)
+
+        #  какая-то логика
+
+        await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
+                                           {'shot_location': data_from_client['shot_location']})
