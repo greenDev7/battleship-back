@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlalchemy import Uuid, DateTime, Integer, ForeignKey, String, SmallInteger
+from sqlalchemy import Uuid, DateTime, ForeignKey, String, SmallInteger
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 
 
@@ -26,11 +24,9 @@ class TRivalCouple(Base):
     dfplayer1 = mapped_column(Uuid)
     dfplayer1_nickname = mapped_column(String(100))
     dfplayer1_state = mapped_column(ForeignKey("tstate.id"))
-    dfplayer1_ip = mapped_column(String(20))
     dfplayer2 = mapped_column(Uuid)
     dfplayer2_nickname = mapped_column(String(100))
     dfplayer2_state = mapped_column(ForeignKey("tstate.id"))
-    dfplayer2_ip = mapped_column(String(20))
     dfgame_type = mapped_column(ForeignKey("tgame_type.id"))
     dfcreated_on = mapped_column(DateTime)
     dffinished_on = mapped_column(DateTime)
