@@ -138,19 +138,15 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             s_.add(rc)  # и обновляем запись в БД
 
     if msg_type == 'fire_request':
-        print('(fire_request) data_from_client', data_from_client)
-
-        #  какая-то логика
-
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'shot_location': data_from_client['shot_location']})
 
     if msg_type == 'fire_response':
-        print('(fire_response) data_from_client', data_from_client)
-
-        #  какая-то логика
-
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'shot_result': data_from_client['shot_result'],
                                             'edgeLocs': data_from_client['edgeLocs'],
                                             'gameIsOver': data_from_client['gameIsOver']})
+
+    if msg_type == 'unsunk_ships':
+        await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
+                                           {'unSunkShips': data_from_client['unSunkShips']})
