@@ -142,11 +142,18 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                                            {'shot_location': data_from_client['shot_location']})
 
     if msg_type == 'fire_response':
+        data_for_sending = {'shot_result': data_from_client['shot_result']}
+
+        if 'sunkShip' in data_from_client:
+            data_for_sending['sunkShip'] = data_from_client['sunkShip']
+
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
-                                           {'shot_result': data_from_client['shot_result'],
-                                            'edgeLocs': data_from_client['edgeLocs'],
-                                            'gameIsOver': data_from_client['gameIsOver']})
+                                           data_for_sending)
 
     if msg_type == 'unsunk_ships':
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'unSunkShips': data_from_client['unSunkShips']})
+
+    if msg_type == 'game_over':
+        print('(game_over) data_from_client: ', data_from_client)
+        await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type, data={})
