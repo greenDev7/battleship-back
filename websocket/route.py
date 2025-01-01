@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import WebSocket, APIRouter, WebSocketDisconnect
 
-from controllers.ws.main_controller import process_data, delete_rival_couple_and_notify
+from websocket.controller import process_data, delete_rival_couple_and_notify
 from websocket.connection_manager import ConnectionManager
 
 router = APIRouter(

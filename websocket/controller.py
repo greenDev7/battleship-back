@@ -14,6 +14,12 @@ state: dict = dict({
     'PLAYING': 3
 })
 
+game_type: dict = dict({
+    'RANDOM': 1,
+    'FRIEND': 2,
+    'COMPUTER': 3
+})
+
 player_available_condition: ColumnElement[bool] = or_(
     and_(TRivalCouple.dfplayer1.__ne__(None), TRivalCouple.dfplayer2.__eq__(None)),
     and_(TRivalCouple.dfplayer1.__eq__(None), TRivalCouple.dfplayer2.__ne__(None)),
@@ -155,5 +161,4 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                                            {'unSunkShips': data_from_client['unSunkShips']})
 
     if msg_type == 'game_over':
-        print('(game_over) data_from_client: ', data_from_client)
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type, data={})
