@@ -6,14 +6,9 @@ from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
 import db
 from entities.model import TRivalCouple, TGameType
+from helper.game_state import GameState
 from helper.game_type import GameType
 from websocket.connection_manager import ConnectionManager
-
-state: dict = dict({
-    'WAITING_FOR_ENEMY': 1,
-    'SHIPS_POSITIONING': 2,
-    'PLAYING': 3
-})
 
 player_available_condition: ColumnElement[bool] = or_(
     and_(TRivalCouple.dfplayer1.__ne__(None), TRivalCouple.dfplayer2.__eq__(None)),
@@ -41,7 +36,7 @@ def create_random_couple(client_uuid, data_from_client):
             id=uuid.uuid4(),
             dfplayer1=client_uuid,
             dfplayer1_nickname=data_from_client['nickName'],
-            dfplayer1_state=state['WAITING_FOR_ENEMY'],
+            dfplayer1_state=GameState.WAITING_FOR_ENEMY.value,
             dfcreated_on=datetime.now(),
             dfgame_type=GameType.RANDOM.value
         )
@@ -62,13 +57,13 @@ def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_fr
         if not rc.dfplayer1:
             rc.dfplayer1 = client_uuid
             rc.dfplayer1_nickname = data_from_client['nickName']
-            rc.dfplayer1_state = state['SHIPS_POSITIONING']
-            rc.dfplayer2_state = state['SHIPS_POSITIONING']
+            rc.dfplayer1_state = GameState.SHIPS_POSITIONING.value
+            rc.dfplayer2_state = GameState.SHIPS_POSITIONING.value
         else:
             rc.dfplayer2 = client_uuid
             rc.dfplayer2_nickname = data_from_client['nickName']
-            rc.dfplayer2_state = state['SHIPS_POSITIONING']
-            rc.dfplayer1_state = state['SHIPS_POSITIONING']
+            rc.dfplayer2_state = GameState.SHIPS_POSITIONING.value
+            rc.dfplayer1_state = GameState.SHIPS_POSITIONING.value
 
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
@@ -124,15 +119,15 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
 
         with db.session_scope() as s_:
             if rc.dfplayer1 == client_uuid:  # если первый игрок нажимает "Играть"
-                rc.dfplayer1_state = state['PLAYING']
+                rc.dfplayer1_state = GameState.PLAYING.value
                 await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_client_id': str(rc.dfplayer1)})
             else:
-                rc.dfplayer2_state = state['PLAYING']
+                rc.dfplayer2_state = GameState.PLAYING.value
                 await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_client_id': str(rc.dfplayer2)})
 
             #  Если оба игрока расставили корабли и нажали "Играть"
             #  отправляем каждому сообщение с msg_type = 'play', сигнализирующее о начале игры
-            if rc.dfplayer1_state == state['PLAYING'] and rc.dfplayer2_state == state['PLAYING']:
+            if rc.dfplayer1_state == GameState.PLAYING.value and rc.dfplayer2_state == GameState.PLAYING.value:
 
                 #  определяем кто из игроков ходит первый
                 turn = randint(1, 2)
