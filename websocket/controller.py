@@ -5,7 +5,8 @@ from random import randint
 from sqlalchemy import select, func, or_, and_, ColumnElement, asc
 
 import db
-from entities.model import TRivalCouple
+from entities.model import TRivalCouple, TGameType
+from helper.game_type import GameType
 from websocket.connection_manager import ConnectionManager
 
 state: dict = dict({
@@ -14,21 +15,19 @@ state: dict = dict({
     'PLAYING': 3
 })
 
-game_type: dict = dict({
-    'RANDOM': 1,
-    'FRIEND': 2,
-    'COMPUTER': 3
-})
-
 player_available_condition: ColumnElement[bool] = or_(
     and_(TRivalCouple.dfplayer1.__ne__(None), TRivalCouple.dfplayer2.__eq__(None)),
     and_(TRivalCouple.dfplayer1.__eq__(None), TRivalCouple.dfplayer2.__ne__(None)),
 )
 
+random_game_clause: ColumnElement[bool] = TGameType.id.__eq__(GameType.RANDOM.value)
 
-def available_rival_couple_exists() -> bool:
+
+def available_random_couple_exists() -> bool:
     with db.session_scope() as s_:
-        stmt = select(func.count(TRivalCouple.id)).where(player_available_condition)
+        stmt = select(func.count(TRivalCouple.id)).join(TGameType, TRivalCouple.dfgame_type.__eq__(TGameType.id),
+                                                        isouter=True).where(
+            and_(player_available_condition, random_game_clause))
         count = s_.execute(stmt).scalar()
 
         if count == 0:
@@ -36,7 +35,7 @@ def available_rival_couple_exists() -> bool:
         return True
 
 
-def create_rival_couple(client_uuid, data_from_client):
+def create_random_couple(client_uuid, data_from_client):
     with db.session_scope() as s_:
         rival_couple_player: TRivalCouple = TRivalCouple(
             id=uuid.uuid4(),
@@ -44,14 +43,17 @@ def create_rival_couple(client_uuid, data_from_client):
             dfplayer1_nickname=data_from_client['nickName'],
             dfplayer1_state=state['WAITING_FOR_ENEMY'],
             dfcreated_on=datetime.now(),
+            dfgame_type=GameType.RANDOM.value
         )
 
         s_.add(rival_couple_player)
 
 
-def find_available_rival_couple() -> TRivalCouple:
+def find_available_random_couple() -> TRivalCouple:
     with db.session_scope() as s_:
-        stmt = select(TRivalCouple).where(player_available_condition).order_by(asc(TRivalCouple.dfcreated_on)).limit(1)
+        stmt = select(TRivalCouple).join(TGameType, TRivalCouple.dfgame_type.__eq__(TGameType.id),
+                                         isouter=True).where(player_available_condition, random_game_clause).order_by(
+            asc(TRivalCouple.dfcreated_on)).limit(1)
         return s_.execute(stmt).scalar()
 
 
@@ -105,10 +107,10 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
     msg_type = data_from_client['msg_type']
 
     if msg_type == 'random_game':
-        if not available_rival_couple_exists():
-            create_rival_couple(client_uuid, data_from_client)
+        if not available_random_couple_exists():
+            create_random_couple(client_uuid, data_from_client)
         else:
-            rc: TRivalCouple = find_available_rival_couple()
+            rc: TRivalCouple = find_available_random_couple()
             add_player_to_rival_couple(rc, client_uuid, data_from_client)
             await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
             await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
