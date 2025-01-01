@@ -21,6 +21,6 @@ async def websocket_endpoint(ws: WebSocket, client_uuid: uuid.UUID):
             data_from_client = await ws.receive_json()
             await process_data(client_uuid, data_from_client, manager)
     except WebSocketDisconnect:
-        manager.disconnect(client_uuid)
+        await manager.disconnect(client_uuid)
         await delete_rival_couple_and_notify(client_uuid, manager)
-        manager.print_clients()
+        await manager.print_clients()

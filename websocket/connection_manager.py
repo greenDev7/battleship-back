@@ -11,7 +11,7 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections[client_uuid] = websocket
 
-    def disconnect(self, client_uuid: uuid.UUID):
+    async def disconnect(self, client_uuid: uuid.UUID):
         self.active_connections.pop(client_uuid)
 
     async def send_personal_message(self, client_uuid: uuid.UUID, message: dict):
@@ -26,5 +26,5 @@ class ConnectionManager:
         for connection in self.active_connections.values():
             await connection.send_text(message)
 
-    def print_clients(self):
+    async def print_clients(self):
         print('Clients: ', self.active_connections.keys())
