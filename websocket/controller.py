@@ -31,7 +31,7 @@ def available_random_couple_exists() -> bool:
         return True
 
 
-def create_random_couple(client_uuid, data_from_client):
+async def create_random_couple(client_uuid, data_from_client):
     with db.session_scope() as s_:
         rival_couple_player: TRivalCouple = TRivalCouple(
             id=uuid.uuid4(),
@@ -53,7 +53,7 @@ def find_available_random_couple() -> TRivalCouple:
         return s_.execute(stmt).scalar()
 
 
-def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_from_client: dict):
+async def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, data_from_client: dict):
     with db.session_scope() as s_:
         if not rc.dfplayer1:
             rc.dfplayer1 = client_uuid
@@ -107,10 +107,10 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
 
         if game_type == GameType.RANDOM.value:
             if not available_random_couple_exists():
-                create_random_couple(client_uuid, data_from_client)
+                await create_random_couple(client_uuid, data_from_client)
             else:
                 rc: TRivalCouple = find_available_random_couple()
-                add_player_to_rival_couple(rc, client_uuid, data_from_client)
+                await add_player_to_rival_couple(rc, client_uuid, data_from_client)
                 await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
                 await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
         else:  # game_type == GameType.FRIEND.value:

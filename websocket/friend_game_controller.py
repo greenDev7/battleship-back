@@ -24,7 +24,7 @@ def friend_couple_exists(client_uuid: uuid.UUID, friend_uuid: uuid.UUID) -> bool
         return True
 
 
-def create_friend_couple(client_uuid: uuid.UUID, data_from_client: dict):
+async def create_friend_couple(client_uuid: uuid.UUID, data_from_client: dict):
     print('Создаем запись для игры с другом')
     with db.session_scope() as s_:
         rival_couple: TRivalCouple = TRivalCouple(
@@ -54,7 +54,7 @@ def find_friend_couple(client_uuid: uuid.UUID, friend_uuid: uuid.UUID) -> TRival
         return s_.scalar(stmt)
 
 
-def join_friend_couple(rc, nickname: str):
+async def join_friend_couple(rc, nickname: str):
     print('Присоединяемся к игре')
     with db.session_scope() as s_:
         rc.dfplayer2_nickname = nickname
@@ -68,11 +68,11 @@ async def process_friend_game_creation(client_uuid: uuid.UUID, data_from_client:
     friend_uuid: uuid.UUID = data_from_client['friendUUID']
 
     if not friend_couple_exists(client_uuid, friend_uuid):
-        create_friend_couple(client_uuid, data_from_client)
+        await create_friend_couple(client_uuid, data_from_client)
     else:
         rc: TRivalCouple = find_friend_couple(client_uuid, friend_uuid)
         print('Запись для дружеской игры найдена')
-        join_friend_couple(rc, data_from_client['nickName'])
+        await join_friend_couple(rc, data_from_client['nickName'])
 
         #  определяем кто из игроков ходит первый
         turn = randint(1, 2)
