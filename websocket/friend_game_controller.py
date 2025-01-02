@@ -8,6 +8,7 @@ import db
 from entities.model import TRivalCouple, TGameType
 from helper.game_state import GameState
 from helper.game_type import GameType
+from helper.message_type import MessageType
 from websocket.connection_manager import ConnectionManager
 
 
@@ -58,8 +59,8 @@ async def join_friend_couple(rc, nickname: str):
     print('Присоединяемся к игре')
     with db.session_scope() as s_:
         rc.dfplayer2_nickname = nickname
-        rc.dfplayer1_state = GameState.PLAYING.value
-        rc.dfplayer2_state = GameState.PLAYING.value
+        rc.dfplayer1_state = GameState.SHIPS_POSITIONING.value
+        rc.dfplayer2_state = GameState.SHIPS_POSITIONING.value
 
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
@@ -74,15 +75,20 @@ async def process_friend_game_creation(client_uuid: uuid.UUID, data_from_client:
         print('Запись для дружеской игры найдена')
         await join_friend_couple(rc, data_from_client['nickName'])
 
+        await manager.send_structured_data(rc.dfplayer1, MessageType.GAME_CREATION.value,
+                                           {'enemy_nickname': rc.dfplayer2_nickname})
+        await manager.send_structured_data(rc.dfplayer2, MessageType.GAME_CREATION.value,
+                                           {'enemy_nickname': rc.dfplayer1_nickname})
+
         #  определяем кто из игроков ходит первый
-        turn = randint(1, 2)
-        if turn == 1:
-            await manager.send_structured_data(rc.dfplayer1, 'play',
-                                               {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer2_nickname})
-            await manager.send_structured_data(rc.dfplayer2, 'play',
-                                               {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer1_nickname})
-        else:
-            await manager.send_structured_data(rc.dfplayer1, 'play',
-                                               {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer2_nickname})
-            await manager.send_structured_data(rc.dfplayer2, 'play',
-                                               {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer1_nickname})
+        # turn = randint(1, 2)
+        # if turn == 1:
+        #     await manager.send_structured_data(rc.dfplayer1, 'play',
+        #                                        {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer2_nickname})
+        #     await manager.send_structured_data(rc.dfplayer2, 'play',
+        #                                        {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer1_nickname})
+        # else:
+        #     await manager.send_structured_data(rc.dfplayer1, 'play',
+        #                                        {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer2_nickname})
+        #     await manager.send_structured_data(rc.dfplayer2, 'play',
+        #                                        {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer1_nickname})

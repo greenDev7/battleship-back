@@ -8,6 +8,7 @@ import db
 from entities.model import TRivalCouple, TGameType
 from helper.game_state import GameState
 from helper.game_type import GameType
+from helper.message_type import MessageType
 from websocket.connection_manager import ConnectionManager
 from websocket.friend_game_controller import process_friend_game_creation
 
@@ -102,10 +103,8 @@ async def delete_rival_couple_and_notify(client_uuid: uuid.UUID, manager: Connec
 async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: ConnectionManager):
     msg_type = data_from_client['msg_type']
 
-    if msg_type == 'game_creation':
-        game_type = data_from_client['game_type']
-
-        if game_type == GameType.RANDOM.value:
+    if msg_type == MessageType.GAME_CREATION.value:
+        if data_from_client['game_type'] == GameType.RANDOM.value:
             if not available_random_couple_exists():
                 await create_random_couple(client_uuid, data_from_client)
             else:
@@ -117,6 +116,7 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             await process_friend_game_creation(client_uuid, data_from_client, manager)
 
     if msg_type == 'ships_are_arranged':
+        game_type: GameType = data_from_client['game_type']
         print(f'Client {client_uuid} is ready to play!')
         rc = find_rival_couple_by_client_id(client_uuid)
 
