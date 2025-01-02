@@ -114,7 +114,7 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                 await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
                 await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
         else:  # game_type == GameType.FRIEND.value:
-            process_friend_game_creation(client_uuid, data_from_client)
+            await process_friend_game_creation(client_uuid, data_from_client, manager)
 
     if msg_type == 'ships_are_arranged':
         print(f'Client {client_uuid} is ready to play!')
