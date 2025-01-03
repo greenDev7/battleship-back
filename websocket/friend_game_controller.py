@@ -79,16 +79,3 @@ async def process_friend_game_creation(client_uuid: uuid.UUID, data_from_client:
                                            {'enemy_nickname': rc.dfplayer2_nickname})
         await manager.send_structured_data(rc.dfplayer2, MessageType.GAME_CREATION.value,
                                            {'enemy_nickname': rc.dfplayer1_nickname})
-
-        #  определяем кто из игроков ходит первый
-        # turn = randint(1, 2)
-        # if turn == 1:
-        #     await manager.send_structured_data(rc.dfplayer1, 'play',
-        #                                        {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer2_nickname})
-        #     await manager.send_structured_data(rc.dfplayer2, 'play',
-        #                                        {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer1_nickname})
-        # else:
-        #     await manager.send_structured_data(rc.dfplayer1, 'play',
-        #                                        {'turn_to_shoot': False, 'enemy_nickname': rc.dfplayer2_nickname})
-        #     await manager.send_structured_data(rc.dfplayer2, 'play',
-        #                                        {'turn_to_shoot': True, 'enemy_nickname': rc.dfplayer1_nickname})

@@ -20,6 +20,14 @@ player_available_condition: ColumnElement[bool] = or_(
 random_game_clause: ColumnElement[bool] = TGameType.id.__eq__(GameType.RANDOM.value)
 
 
+def find_by_client_id_clause(client_uuid: uuid.UUID) -> ColumnElement[bool]:
+    clause: ColumnElement[bool] = or_(
+        TRivalCouple.dfplayer1.__eq__(client_uuid),
+        TRivalCouple.dfplayer2.__eq__(client_uuid)
+    )
+    return clause
+
+
 def available_random_couple_exists() -> bool:
     with db.session_scope() as s_:
         stmt = select(func.count(TRivalCouple.id)).join(TGameType, TRivalCouple.dfgame_type.__eq__(TGameType.id),
@@ -70,15 +78,26 @@ async def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, d
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
 
-def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> TRivalCouple:
+def find_rival_couple_by_client_id_and_game_type(client_uuid: uuid.UUID, game_type: int) -> TRivalCouple:
     with db.session_scope() as s_:
-        stmt = select(TRivalCouple).where(
-            or_(
-                TRivalCouple.dfplayer1.__eq__(client_uuid),
-                TRivalCouple.dfplayer2.__eq__(client_uuid)
-            )
-        ).limit(1)  # запись в БД с таким фильтром по-хорошему должна быть только одна
+        # запись в БД с таким фильтром по-хорошему должна быть только одна
+        stmt = select(TRivalCouple).join(TGameType, TRivalCouple.dfgame_type.__eq__(TGameType.id),
+                                         isouter=True).where(
+            and_(TGameType.id.__eq__(game_type), find_by_client_id_clause(client_uuid))
+        ).limit(1)
 
+        return s_.scalar(stmt)
+
+
+def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> TRivalCouple:
+    """
+    Возвращает объект типа TRivalCouple по client_uuid
+    :param client_uuid: уникальный идентификатор клиента (websocket-подключения)
+    :return: сопернищающая пара (TRivalCouple)
+    """
+    with db.session_scope() as s_:
+        # запись в БД с таким фильтром по-хорошему должна быть только одна
+        stmt = select(TRivalCouple).where(find_by_client_id_clause(client_uuid)).limit(1)
         return s_.scalar(stmt)
 
 
@@ -116,9 +135,9 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             await process_friend_game_creation(client_uuid, data_from_client, manager)
 
     if msg_type == 'ships_are_arranged':
-        game_type: GameType = data_from_client['game_type']
+        game_type: int = data_from_client['game_type']
         print(f'Client {client_uuid} is ready to play!')
-        rc = find_rival_couple_by_client_id(client_uuid)
+        rc = find_rival_couple_by_client_id_and_game_type(client_uuid, game_type)
 
         if not rc:
             return
