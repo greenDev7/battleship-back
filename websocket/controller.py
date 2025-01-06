@@ -134,7 +134,7 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
         else:  # game_type == GameType.FRIEND.value:
             await process_friend_game_creation(client_uuid, data_from_client, manager)
 
-    if msg_type == 'ships_are_arranged':
+    if msg_type == MessageType.SHIPS_ARE_ARRANGED.value:
         game_type: int = data_from_client['game_type']
         print(f'Client {client_uuid} is ready to play!')
         rc = find_rival_couple_by_client_id_and_game_type(client_uuid, game_type)
@@ -151,21 +151,21 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                 await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_client_id': str(rc.dfplayer2)})
 
             #  Если оба игрока расставили корабли и нажали "Играть"
-            #  отправляем каждому сообщение с msg_type = 'play', сигнализирующее о начале игры
+            #  отправляем каждому сообщение с msg_type = PLAY, сигнализирующее о начале игры
             if rc.dfplayer1_state == GameState.PLAYING.value and rc.dfplayer2_state == GameState.PLAYING.value:
 
                 #  определяем кто из игроков ходит первый
                 turn = randint(1, 2)
                 if turn == 1:
-                    await manager.send_structured_data(rc.dfplayer1, 'play', {'turn_to_shoot': True})
-                    await manager.send_structured_data(rc.dfplayer2, 'play', {'turn_to_shoot': False})
+                    await manager.send_structured_data(rc.dfplayer1, MessageType.PLAY.value, {'turn_to_shoot': True})
+                    await manager.send_structured_data(rc.dfplayer2, MessageType.PLAY.value, {'turn_to_shoot': False})
                 else:
-                    await manager.send_structured_data(rc.dfplayer1, 'play', {'turn_to_shoot': False})
-                    await manager.send_structured_data(rc.dfplayer2, 'play', {'turn_to_shoot': True})
+                    await manager.send_structured_data(rc.dfplayer1, MessageType.PLAY.value, {'turn_to_shoot': False})
+                    await manager.send_structured_data(rc.dfplayer2, MessageType.PLAY.value, {'turn_to_shoot': True})
 
             s_.add(rc)  # и обновляем запись в БД
 
-    if msg_type == 'fire_request':
+    if msg_type == MessageType.FIRE_REQUEST.value:
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'shot_location': data_from_client['shot_location']})
 
