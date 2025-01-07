@@ -110,10 +110,10 @@ async def delete_rival_couple_and_notify(client_uuid: uuid.UUID, manager: Connec
     with db.session_scope() as s_:
         if couple.dfplayer1 and couple.dfplayer2:
             if couple.dfplayer1 == client_uuid:  # если отключается player1, то оповещаем player2
-                await manager.send_structured_data(couple.dfplayer2, 'disconnection',
+                await manager.send_structured_data(couple.dfplayer2, MessageType.DISCONNECTION.value,
                                                    {'enemy_nickname': couple.dfplayer1_nickname})
             else:  # и наоборот
-                await manager.send_structured_data(couple.dfplayer1, 'disconnection',
+                await manager.send_structured_data(couple.dfplayer1, MessageType.DISCONNECTION.value,
                                                    {'enemy_nickname': couple.dfplayer2_nickname})
 
         s_.delete(couple)
@@ -169,7 +169,7 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'shot_location': data_from_client['shot_location']})
 
-    if msg_type == 'fire_response':
+    if msg_type == MessageType.FIRE_RESPONSE.value:
         data_for_sending = {'shot_result': data_from_client['shot_result']}
 
         if 'sunkShip' in data_from_client:
@@ -178,9 +178,9 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            data_for_sending)
 
-    if msg_type == 'unsunk_ships':
+    if msg_type == MessageType.UNSUNK_SHIPS.value:
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type,
                                            {'unSunkShips': data_from_client['unSunkShips']})
 
-    if msg_type == 'game_over':
+    if msg_type == MessageType.GAME_OVER.value:
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type, data={})
