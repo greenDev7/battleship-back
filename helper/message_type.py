@@ -10,3 +10,4 @@ class MessageType(Enum):
     UNSUNK_SHIPS = 5
     GAME_OVER = 6
     DISCONNECTION = 7
+    PLAY_AGAIN = 8

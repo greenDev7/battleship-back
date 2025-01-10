@@ -46,7 +46,7 @@ async def create_random_couple(client_uuid, data_from_client):
             id=uuid.uuid4(),
             dfplayer1=client_uuid,
             dfplayer1_nickname=data_from_client['nickName'],
-            dfplayer1_state=GameState.WAITING_FOR_ENEMY.value,
+            dfplayer1_state=GameState.SEARCHING_FOR_OPPONENT.value,
             dfcreated_on=datetime.now(),
             dfgame_type=GameType.RANDOM.value
         )
@@ -78,15 +78,9 @@ async def add_player_to_rival_couple(rc: TRivalCouple, client_uuid: uuid.UUID, d
         s_.add(rc)  # add to s_.dirty for subsequent commit to DB
 
 
-def find_rival_couple_by_client_id_and_game_type(client_uuid: uuid.UUID, game_type: int) -> TRivalCouple:
+def find_rival_couple_by_id(game_id: uuid.UUID) -> TRivalCouple:
     with db.session_scope() as s_:
-        # запись в БД с таким фильтром по-хорошему должна быть только одна
-        stmt = select(TRivalCouple).join(TGameType, TRivalCouple.dfgame_type.__eq__(TGameType.id),
-                                         isouter=True).where(
-            and_(TGameType.id.__eq__(game_type), find_by_client_id_clause(client_uuid))
-        ).limit(1)
-
-        return s_.scalar(stmt)
+        return s_.get(TRivalCouple, game_id)
 
 
 def find_rival_couple_by_client_id(client_uuid: uuid.UUID) -> TRivalCouple:
@@ -129,15 +123,15 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             else:
                 rc: TRivalCouple = find_available_random_couple()
                 await add_player_to_rival_couple(rc, client_uuid, data_from_client)
-                await manager.send_structured_data(rc.dfplayer1, msg_type, {'enemy_nickname': rc.dfplayer2_nickname})
-                await manager.send_structured_data(rc.dfplayer2, msg_type, {'enemy_nickname': rc.dfplayer1_nickname})
+                await manager.send_structured_data(rc.dfplayer1, msg_type,
+                                                   {'enemy_nickname': rc.dfplayer2_nickname, 'gameId': str(rc.id)})
+                await manager.send_structured_data(rc.dfplayer2, msg_type,
+                                                   {'enemy_nickname': rc.dfplayer1_nickname, 'gameId': str(rc.id)})
         else:  # game_type == GameType.FRIEND.value:
             await process_friend_game_creation(client_uuid, data_from_client, manager)
 
     if msg_type == MessageType.SHIPS_ARE_ARRANGED.value:
-        game_type: int = data_from_client['game_type']
-        print(f'Client {client_uuid} is ready to play!')
-        rc = find_rival_couple_by_client_id_and_game_type(client_uuid, game_type)
+        rc = find_rival_couple_by_id(data_from_client['game_id'])
 
         if not rc:
             return
@@ -153,8 +147,7 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
             #  Если оба игрока расставили корабли и нажали "Играть"
             #  отправляем каждому сообщение с msg_type = PLAY, сигнализирующее о начале игры
             if rc.dfplayer1_state == GameState.PLAYING.value and rc.dfplayer2_state == GameState.PLAYING.value:
-
-                #  определяем кто из игроков ходит первый
+                #  определяем кто из игроков ходит првым и оповещаем игроков
                 turn = randint(1, 2)
                 if turn == 1:
                     await manager.send_structured_data(rc.dfplayer1, MessageType.PLAY.value, {'turn_to_shoot': True})
@@ -184,3 +177,20 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
 
     if msg_type == MessageType.GAME_OVER.value:
         await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type, data={})
+
+    if msg_type == MessageType.PLAY_AGAIN.value:
+        # оповестим игрока о том, что противник хочет сыграть с ним еще раз
+        await manager.send_structured_data(uuid.UUID(data_from_client['enemy_client_id']), msg_type, {})
+        rc = find_rival_couple_by_id(data_from_client['game_id'])
+
+        if not rc:
+            return
+
+        with db.session_scope() as s_:
+            sp: int = GameState.SHIPS_POSITIONING.value
+            if rc.dfplayer1 == client_uuid:
+                rc.dfplayer1_state = sp
+            else:
+                rc.dfplayer2_state = sp
+
+            s_.add(rc)  # и обновляем запись в БД

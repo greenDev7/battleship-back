@@ -32,7 +32,7 @@ async def create_friend_couple(client_uuid: uuid.UUID, data_from_client: dict):
             id=uuid.uuid4(),
             dfplayer1=client_uuid,
             dfplayer1_nickname=data_from_client['nickName'],
-            dfplayer1_state=GameState.WAITING_FOR_ENEMY.value,
+            dfplayer1_state=GameState.SEARCHING_FOR_OPPONENT.value,
             dfplayer2=data_from_client['friendUUID'],
             dfcreated_on=datetime.now(),
             dfgame_type=GameType.FRIEND.value
