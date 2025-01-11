@@ -9,6 +9,7 @@ from entities.model import TRivalCouple, TGameType
 from helper.game_state import GameState
 from helper.game_type import GameType
 from helper.message_type import MessageType
+from websocket.common import notify_enemy_about_game_creation
 from websocket.connection_manager import ConnectionManager
 from websocket.friend_game_controller import process_friend_game_creation
 
@@ -118,15 +119,14 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
 
     if msg_type == MessageType.GAME_CREATION.value:
         if data_from_client['game_type'] == GameType.RANDOM.value:
+
             if not available_random_couple_exists():
                 await create_random_couple(client_uuid, data_from_client)
             else:
                 rc: TRivalCouple = find_available_random_couple()
                 await add_player_to_rival_couple(rc, client_uuid, data_from_client)
-                await manager.send_structured_data(rc.dfplayer1, msg_type,
-                                                   {'enemy_nickname': rc.dfplayer2_nickname, 'gameId': str(rc.id)})
-                await manager.send_structured_data(rc.dfplayer2, msg_type,
-                                                   {'enemy_nickname': rc.dfplayer1_nickname, 'gameId': str(rc.id)})
+                await notify_enemy_about_game_creation(rc, manager)
+
         else:  # game_type == GameType.FRIEND.value:
             await process_friend_game_creation(client_uuid, data_from_client, manager)
 
