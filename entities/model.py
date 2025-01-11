@@ -6,15 +6,15 @@ class Base(DeclarativeBase):
     pass
 
 
-class TGame(Base):
-    __tablename__ = "tgame"
-
-    id = mapped_column(Uuid, primary_key=True)
-    dfcreated_on = mapped_column(DateTime)
-    dffinished_on = mapped_column(DateTime)
-    dfwinner = mapped_column(Uuid)
-    dfloser = mapped_column(Uuid)
-    dfgame_type = mapped_column(ForeignKey("tgame_type.id"))
+# class TGame(Base):
+#     __tablename__ = "tgame"
+#
+#     id = mapped_column(Uuid, primary_key=True)
+#     dfcreated_on = mapped_column(DateTime)
+#     dffinished_on = mapped_column(DateTime)
+#     dfwinner = mapped_column(Uuid)
+#     dfloser = mapped_column(Uuid)
+#     dfgame_type = mapped_column(ForeignKey("tgame_type.id"))
 
 
 class TRivalCouple(Base):
