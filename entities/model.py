@@ -11,10 +11,10 @@ class TRivalCouple(Base):
 
     id = mapped_column(Uuid, primary_key=True)
     dfplayer1 = mapped_column(Uuid)
-    dfplayer1_nickname = mapped_column(String(100))
+    dfplayer1_nickname = mapped_column(String(25))
     dfplayer1_state = mapped_column(ForeignKey("tplayer_state.id"))
     dfplayer2 = mapped_column(Uuid)
-    dfplayer2_nickname = mapped_column(String(100))
+    dfplayer2_nickname = mapped_column(String(25))
     dfplayer2_state = mapped_column(ForeignKey("tplayer_state.id"))
     dfgame_type = mapped_column(ForeignKey("tgame_type.id"))
     dfcreated_on = mapped_column(DateTime)

@@ -1,4 +1,4 @@
-PG_HOST: postgres-dbms
+PG_HOST: postgres_dbms
 PG_PORT: 5432
 PG_USERNAME: postgres
 PG_PASSWORD: 12345
