@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import create_engine, Engine, text
 from sqlalchemy.orm import sessionmaker
 
 from config.config import app_config
@@ -38,5 +38,19 @@ def get_engine() -> Engine:
     return engine
 
 
-async def create_tables(eng: Engine):
+async def create_tables_and_add_initial_data(eng: Engine):
     Base.metadata.create_all(eng)
+
+    with engine.connect() as conn:
+        stmt: str = """INSERT INTO public.tgame_type (dfname_en, dfname) VALUES ('RANDOM', 'Игра со случайным соперником');
+INSERT INTO public.tgame_type (dfname_en, dfname) VALUES ('FRIEND', 'Игра с другом');
+INSERT INTO public.tgame_type (dfname_en, dfname) VALUES ('COMPUTER', 'Игра с компьютером');
+--
+INSERT INTO public.tplayer_state (dfname_en, dfname) VALUES ('SEARCHING_FOR_OPPONENT', 'Поиск соперника');
+INSERT INTO public.tplayer_state (dfname_en, dfname) VALUES ('SHIPS_POSITIONING', 'Расстановка кораблей');
+INSERT INTO public.tplayer_state (dfname_en, dfname) VALUES ('PLAYING', 'Игра');"""
+
+        sql = text(stmt)
+        conn.execute(sql)
+
+        conn.commit()

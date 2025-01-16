@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import create_tables, get_engine
+from db import create_tables_and_add_initial_data, get_engine
 from websocket import route
 
 app = FastAPI()
@@ -29,7 +29,7 @@ async def health_check():
 
 @app.post("/createTables")
 async def initialize_tables():
-    await create_tables(get_engine())
+    await create_tables_and_add_initial_data(get_engine())
 
 
 if __name__ == '__main__':
