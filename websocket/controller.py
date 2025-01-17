@@ -163,7 +163,8 @@ async def process_data(client_uuid: uuid.UUID, data_from_client: dict, manager: 
                                            {'shot_location': data_from_client['shot_location']})
 
     if msg_type == MessageType.FIRE_RESPONSE.value:
-        data_for_sending = {'shot_result': data_from_client['shot_result']}
+        data_for_sending = {'shot_result': data_from_client['shot_result'],
+                            'shot_location': data_from_client['shot_location']}
 
         if 'sunkShip' in data_from_client:
             data_for_sending['sunkShip'] = data_from_client['sunkShip']
