@@ -3,3 +3,5 @@ PG_PORT: 5432
 PG_USERNAME: postgres
 PG_PASSWORD: 12345
 PG_DB_NAME: postgres
+
+SHOW_SQL: False

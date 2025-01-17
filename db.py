@@ -15,7 +15,7 @@ pg_url = 'postgresql://{user}:{password}@{host}:{port}/{db_name}'.format(
     db_name=app_config['PG_DB_NAME'],
 )
 
-engine = create_engine(pg_url, echo=True)
+engine = create_engine(pg_url, echo=app_config['SHOW_SQL'])
 
 OurSession = sessionmaker(bind=engine, expire_on_commit=False)
 
