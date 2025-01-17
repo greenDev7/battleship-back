@@ -23,4 +23,4 @@ async def websocket_endpoint(ws: WebSocket, client_uuid: uuid.UUID):
     except WebSocketDisconnect:
         await manager.disconnect(client_uuid)
         await delete_rival_couple_and_notify(client_uuid, manager)
-        await manager.print_clients()
+        await manager.print_number_of_clients()

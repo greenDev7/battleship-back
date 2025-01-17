@@ -26,5 +26,5 @@ class ConnectionManager:
         for connection in self.active_connections.values():
             await connection.send_text(message)
 
-    async def print_clients(self):
-        print('Clients: ', self.active_connections.keys())
+    async def print_number_of_clients(self):
+        print('Number of clients: ', len(self.active_connections.keys()))
